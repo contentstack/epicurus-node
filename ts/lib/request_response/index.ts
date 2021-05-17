@@ -52,6 +52,7 @@ export function request<T>(redisClient, channel: string, body: any): Promise<T> 
 
       if (response.error) {
         rej(new EpicurusError(response.error.message, {
+          status: response.error.status,
           severity: response.error.severity,
           context: {
             context: { originalRequest: body, channel: channel },
