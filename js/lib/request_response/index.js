@@ -57,6 +57,7 @@ function request(redisClient, channel, body) {
             const response = JSON.parse(redisResponse);
             if (response.error) {
                 rej(new error_1.EpicurusError(response.error.message, {
+                    status: response.error.status,
                     severity: response.error.severity,
                     context: {
                         context: { originalRequest: body, channel: channel },

@@ -7,7 +7,7 @@ class EpicurusError extends Error {
         this.name = meta.name || this.name;
         this.context = meta.context;
         this.stack = new Error().stack;
-        this.status = meta.stack || meta.status;
+        this.status = meta.status || meta.stack;
         this.severity = meta.severity;
     }
     toString() {
