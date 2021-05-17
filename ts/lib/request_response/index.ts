@@ -97,7 +97,7 @@ export async function server<T, S>(redisClient, channel: string, callback: serve
       if (req.ttl > Date.now() - config.requestValidityPeriod) {
         callback(req.body, async function (error, result) {
           const errorRef = error
-            ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1 }
+            ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1, status: error.status }
             : null
 
           let redisResponse: EpicurusResponse = {
