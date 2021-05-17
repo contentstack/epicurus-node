@@ -100,7 +100,7 @@ function server(redisClient, channel, callback) {
                         callback(req.body, function (error, result) {
                             return __awaiter(this, void 0, void 0, function* () {
                                 const errorRef = error
-                                    ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1 }
+                                    ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1, status: error.status }
                                     : null;
                                 let redisResponse = {
                                     error: errorRef,
