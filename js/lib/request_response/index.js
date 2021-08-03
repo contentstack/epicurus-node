@@ -9,11 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const v4 = require("uuid/v4");
-const config_1 = require("../../config");
 const error_1 = require("../error");
 let clients = [];
 let serversEnabled;
-function request(redisClient, channel, body) {
+function request(redisClient, channel, body, requestValidityPeriod) {
     return new Promise((res, rej) => __awaiter(this, void 0, void 0, function* () {
         let responseValid = true;
         const reqId = v4();
@@ -35,7 +34,7 @@ function request(redisClient, channel, body) {
                             responseValid = false;
                             clientClone.quit();
                         });
-                    }, config_1.config.requestValidityPeriod);
+                    }, requestValidityPeriod);
                 }
                 else {
                     rej(new error_1.EpicurusError('Server not found', {
@@ -46,7 +45,7 @@ function request(redisClient, channel, body) {
                     clientClone.quit();
                 }
             });
-        }, config_1.config.requestValidityPeriod + 100);
+        }, requestValidityPeriod + 100);
         clientClone.brpop(reqId, 0, function (_null, popInfo) {
             clearTimeout(timeout);
             clearTimeout(timeoutFallback);
@@ -76,7 +75,7 @@ function request(redisClient, channel, body) {
     }));
 }
 exports.request = request;
-function server(redisClient, channel, callback) {
+function server(redisClient, channel, callback, serverValidityPeriod) {
     return __awaiter(this, void 0, void 0, function* () {
         const clientClone = redisClient.duplicate();
         clients.push(clientClone);
@@ -97,7 +96,7 @@ function server(redisClient, channel, callback) {
                     yield redisClient.delAsync(`${reqId}-ref`);
                     const req = JSON.parse(rawRequest);
                     req.body.channel = channel;
-                    if (req.ttl > Date.now() - config_1.config.requestValidityPeriod) {
+                    if (req.ttl > Date.now() - serverValidityPeriod) {
                         callback(req.body, function (error, result) {
                             return __awaiter(this, void 0, void 0, function* () {
                                 const errorRef = error
