@@ -1,3 +1,3 @@
 export const config = {
-  requestValidityPeriod: 10000 // milliseconds
+  requestValidityPeriod: 1 * 1000 // milliseconds
 }
