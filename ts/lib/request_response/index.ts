@@ -1,11 +1,16 @@
 import * as v4 from 'uuid/v4'
-import { config } from '../../config'
+
+import {
+  EpicurusRequest,
+  EpicurusResponse,
+  serverCallback,
+} from '../../interface'
 import { EpicurusError } from '../error'
-import { EpicurusRequest, EpicurusResponse, serverCallback } from '../../interface'
+
 let clients = []
 let serversEnabled
 
-export function request<T>(redisClient, channel: string, body: any): Promise<T> {
+export function request<T>(redisClient, channel: string, body: any, requestValidityPeriod: number): Promise<T> {
   return new Promise(async (res, rej) => {
     let responseValid = true
     const reqId = v4()
@@ -28,7 +33,7 @@ export function request<T>(redisClient, channel: string, body: any): Promise<T> 
 
           responseValid = false
           clientClone.quit()
-        }, config.requestValidityPeriod)
+        }, requestValidityPeriod)
       } else {
         rej(new EpicurusError('Server not found', {
           context: { originalRequest: body, channel: channel },
@@ -38,7 +43,7 @@ export function request<T>(redisClient, channel: string, body: any): Promise<T> 
         responseValid = false
         clientClone.quit()
       }
-    }, config.requestValidityPeriod + 100)
+    }, requestValidityPeriod + 100)
 
     clientClone.brpop(reqId, 0, function (_null, popInfo) {
       clearTimeout(timeout)
@@ -72,7 +77,7 @@ export function request<T>(redisClient, channel: string, body: any): Promise<T> 
   })
 }
 
-export async function server<T, S>(redisClient, channel: string, callback: serverCallback<T, S>): Promise<void> {
+export async function server<T, S>(redisClient, channel: string, callback: serverCallback<T, S>, serverValidityPeriod: number): Promise<void> {
   const clientClone = redisClient.duplicate()
   clients.push(clientClone)
 
@@ -95,7 +100,7 @@ export async function server<T, S>(redisClient, channel: string, callback: serve
       const req: EpicurusRequest = JSON.parse(rawRequest)
       req.body.channel = channel
 
-      if (req.ttl > Date.now() - config.requestValidityPeriod) {
+      if (req.ttl > Date.now() - serverValidityPeriod) {
         callback(req.body, async function (error, result) {
           const errorRef = error
             ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1, status: error.status }
