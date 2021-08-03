@@ -1,6 +1,6 @@
-import { EpicurusRedisConfig, serverCallback, subscribeCallback } from './interface';
 import { RedisClient } from 'redis';
-export default function Epicurus(redisConfig?: EpicurusRedisConfig): EpicurusPublicInterface;
+import { EpicurusRedisConfig, serverCallback, subscribeCallback } from './interface';
+export default function Epicurus(redisConfig?: EpicurusRedisConfig, requestTimeout?: number): EpicurusPublicInterface;
 export declare type EpicurusPublicInterface = {
     getRedisClient: () => RedisClient;
     getRedisSubClient: () => RedisClient;
