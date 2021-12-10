@@ -78,10 +78,11 @@ export function request<T>(redisClient, channel: string, body: any, requestValid
 }
 
 export async function server<T, S>(redisClient, channel: string, callback: serverCallback<T, S>, serverValidityPeriod: number): Promise<void> {
+  const REDIS_RESPONSE_TTL_IN_SECONDS = 1
   const clientClone = redisClient.duplicate()
   clients.push(clientClone)
 
-  function brpop () {
+  function brpop() {
     clientClone.brpop(channel, 0, async function (_null, popInfo) {
       if (_null) {
         console.error('BRPOP ERROR', _null)
@@ -100,35 +101,35 @@ export async function server<T, S>(redisClient, channel: string, callback: serve
       const req: EpicurusRequest = JSON.parse(rawRequest)
       req.body.channel = channel
 
-      if (req.ttl > Date.now() - serverValidityPeriod) {
-        callback(req.body, async function (error, result) {
-          const errorRef = error
-            ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1, status: error.status }
-            : null
+      callback(req.body, async function (error, result) {
+        const errorRef = error
+          ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1, status: error.status }
+          : null
 
-          let redisResponse: EpicurusResponse = {
-            error: errorRef,
-            result: result
-          }
+        let redisResponse: EpicurusResponse = {
+          error: errorRef,
+          result: result
+        }
 
-          redisClient.lpush(req.reqId, JSON.stringify(redisResponse))
-        })
-      }
+        redisClient.lpush(req.reqId, JSON.stringify(redisResponse))
+        redisClient.expire(req.reqId, REDIS_RESPONSE_TTL_IN_SECONDS)
+      })
+
     })
   }
 
   brpop()
 }
 
-export function disableServers () {
+export function disableServers() {
   serversEnabled = false
   closeAllClients()
 }
 
-export function enableServers () {
+export function enableServers() {
   serversEnabled = true
 }
 
-export function closeAllClients () {
+export function closeAllClients() {
   clients.forEach(c => c.end(false))
 }

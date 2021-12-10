@@ -77,6 +77,7 @@ function request(redisClient, channel, body, requestValidityPeriod) {
 exports.request = request;
 function server(redisClient, channel, callback, serverValidityPeriod) {
     return __awaiter(this, void 0, void 0, function* () {
+        const REDIS_RESPONSE_TTL_IN_SECONDS = 1;
         const clientClone = redisClient.duplicate();
         clients.push(clientClone);
         function brpop() {
@@ -96,20 +97,19 @@ function server(redisClient, channel, callback, serverValidityPeriod) {
                     yield redisClient.delAsync(`${reqId}-ref`);
                     const req = JSON.parse(rawRequest);
                     req.body.channel = channel;
-                    if (req.ttl > Date.now() - serverValidityPeriod) {
-                        callback(req.body, function (error, result) {
-                            return __awaiter(this, void 0, void 0, function* () {
-                                const errorRef = error
-                                    ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1, status: error.status }
-                                    : null;
-                                let redisResponse = {
-                                    error: errorRef,
-                                    result: result
-                                };
-                                redisClient.lpush(req.reqId, JSON.stringify(redisResponse));
-                            });
+                    callback(req.body, function (error, result) {
+                        return __awaiter(this, void 0, void 0, function* () {
+                            const errorRef = error
+                                ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1, status: error.status }
+                                : null;
+                            let redisResponse = {
+                                error: errorRef,
+                                result: result
+                            };
+                            redisClient.lpush(req.reqId, JSON.stringify(redisResponse));
+                            redisClient.expire(req.reqId, REDIS_RESPONSE_TTL_IN_SECONDS);
                         });
-                    }
+                    });
                 });
             });
         }
