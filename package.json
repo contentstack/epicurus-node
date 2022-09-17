@@ -28,7 +28,7 @@
   "homepage": "https://github.com/ABXTrading/epicurus-node#readme",
   "dependencies": {
     "@types/bluebird": "3.5.20",
-    "@types/redis": "2.8.6",
+    "@types/redis": "4.0.10",
     "@types/uuid": "3.4.3",
     "@types/node": "8.0.20",
     "bluebird": "3.5.0",
