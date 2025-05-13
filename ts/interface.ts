@@ -17,6 +17,7 @@ export interface EpicurusResponse {
 }
 
 export interface EpicurusRedisConfig {
-  host: string
-  port: number
+  host?: string
+  port?: number,
+  url?: string
 }

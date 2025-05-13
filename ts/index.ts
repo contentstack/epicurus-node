@@ -5,6 +5,21 @@ import * as redis from 'redis'
 import * as bluebird from 'bluebird'
 bluebird.promisifyAll(redis.RedisClient.prototype)
 bluebird.promisifyAll(redis.Multi.prototype)
+const REDIS_TLS_HOST = 'rediss'
+
+function getConfig(redisConfig: EpicurusRedisConfig) {
+  if (redisConfig.url && redisConfig.url.includes(REDIS_TLS_HOST)) {
+    return {
+      tls: {
+        ...redisConfig,
+        rejectUnauthorized: true
+      }
+    }
+  } else {
+    return redisConfig
+  }
+
+}
 
 export default function Epicurus (redisConfig: EpicurusRedisConfig = {
   host: 'localhost',
@@ -13,8 +28,8 @@ export default function Epicurus (redisConfig: EpicurusRedisConfig = {
   // A separate subscription Redis client is required as once a client has
   // called SUBSCRIBE, it is put into a slave mode the does not allow any other
   // kind of action
-  const redisClient = redis.createClient(redisConfig)
-  const redisSub = redis.createClient(redisConfig)
+  const redisClient = redis.createClient(getConfig(redisConfig))
+  const redisSub = redis.createClient(getConfig(redisConfig))
 
   setupSubscriptionListener(redisSub)
   enableServers()
