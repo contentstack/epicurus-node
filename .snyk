@@ -1,0 +1,10 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.0
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  SNYK-JS-REDIS-1255645:
+    - '*':
+        reason: 'High Severity - https://contentstack.atlassian.net/browse/IS-1224'
+        expires: 2025-06-15T05:52:48.301Z
+        created: 2025-05-15T05:52:48.306Z
+patch: {}

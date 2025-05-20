@@ -22,7 +22,7 @@ export class EpicurusError extends Error {
     this.name = meta.name || this.name
     this.context = meta.context
     this.stack = (<any>new Error()).stack
-    this.status = meta.stack || meta.status
+    this.status = meta.status || meta.stack
     this.severity = meta.severity
   }
 

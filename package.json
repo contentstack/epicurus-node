@@ -1,12 +1,15 @@
 {
-  "name": "epicurus-node",
-  "version": "0.3.0",
+  "name": "@contentstack/epicurus-node",
+  "version": "0.3.8",
   "description": "Redis request/response and PubSub sugar",
   "main": "js/index.js",
   "types": "js/index.d.ts",
   "files": [
     "js/"
   ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "prepublish": "npm run lint && rm -rf js/* && tsc --sourcemap -p ts/",
     "lint": "tslint 'ts/**/*.ts'",
@@ -15,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ABXTrading/epicurus-node.git"
+    "url": "git+https://github.com/contentstack/epicurus-node.git"
   },
   "keywords": [
     "Redis"
@@ -32,7 +35,7 @@
     "@types/uuid": "3.4.3",
     "@types/node": "8.0.20",
     "bluebird": "3.5.0",
-    "redis": "2.7.1",
+    "redis": "^3.1.2",
     "uuid": "3.2.1"
   },
   "devDependencies": {
