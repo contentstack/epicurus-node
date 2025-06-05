@@ -29,9 +29,11 @@ const REDIS_TLS_HOST = 'rediss'
 
 function getConfig(redisConfig: EpicurusRedisConfig) {
   if (redisConfig.url && redisConfig.url.includes(REDIS_TLS_HOST)) {
+    const { url, ...rest } = redisConfig
     return {
+      url,
       tls: {
-        ...redisConfig,
+        ...rest,
         rejectUnauthorized: true
       }
     }
