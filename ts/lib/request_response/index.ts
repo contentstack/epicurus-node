@@ -1,11 +1,16 @@
 import * as v4 from 'uuid/v4'
-import { config } from '../../config'
+
+import {
+  EpicurusRequest,
+  EpicurusResponse,
+  serverCallback,
+} from '../../interface'
 import { EpicurusError } from '../error'
-import { EpicurusRequest, EpicurusResponse, serverCallback } from '../../interface'
+
 let clients = []
 let serversEnabled
 
-export function request<T>(redisClient, channel: string, body: any): Promise<T> {
+export function request<T>(redisClient, channel: string, body: any, requestValidityPeriod: number): Promise<T> {
   return new Promise(async (res, rej) => {
     let responseValid = true
     const reqId = v4()
@@ -28,7 +33,7 @@ export function request<T>(redisClient, channel: string, body: any): Promise<T> 
 
           responseValid = false
           clientClone.quit()
-        }, config.requestValidityPeriod)
+        }, requestValidityPeriod)
       } else {
         rej(new EpicurusError('Server not found', {
           context: { originalRequest: body, channel: channel },
@@ -38,7 +43,7 @@ export function request<T>(redisClient, channel: string, body: any): Promise<T> 
         responseValid = false
         clientClone.quit()
       }
-    }, config.requestValidityPeriod + 100)
+    }, requestValidityPeriod + 100)
 
     clientClone.brpop(reqId, 0, function (_null, popInfo) {
       clearTimeout(timeout)
@@ -52,6 +57,7 @@ export function request<T>(redisClient, channel: string, body: any): Promise<T> 
 
       if (response.error) {
         rej(new EpicurusError(response.error.message, {
+          status: response.error.status,
           severity: response.error.severity,
           context: {
             context: { originalRequest: body, channel: channel },
@@ -71,14 +77,22 @@ export function request<T>(redisClient, channel: string, body: any): Promise<T> 
   })
 }
 
-export async function server<T, S>(redisClient, channel: string, callback: serverCallback<T, S>): Promise<void> {
+export async function server<T, S>(redisClient, channel: string, callback: serverCallback<T, S>, serverValidityPeriod: number): Promise<void> {
+  const REDIS_RESPONSE_TTL_IN_SECONDS = 1
   const clientClone = redisClient.duplicate()
   clients.push(clientClone)
 
-  function brpop () {
+  function brpop() {
     clientClone.brpop(channel, 0, async function (_null, popInfo) {
+      if (_null) {
+        console.error('BRPOP ERROR', _null)
+      }
       if (enableServers) {
         brpop()
+      }
+
+      if (!popInfo) {
+        return
       }
 
       const reqId = popInfo[1]
@@ -87,35 +101,35 @@ export async function server<T, S>(redisClient, channel: string, callback: serve
       const req: EpicurusRequest = JSON.parse(rawRequest)
       req.body.channel = channel
 
-      if (req.ttl > Date.now() - config.requestValidityPeriod) {
-        callback(req.body, async function (error, result) {
-          const errorRef = error
-          ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1 }
+      callback(req.body, async function (error, result) {
+        const errorRef = error
+          ? { name: error.name, message: error.message, stack: error.stack, severity: error.severity || 1, status: error.status }
           : null
 
-          let redisResponse: EpicurusResponse = {
-            error: errorRef,
-            result: result
-          }
+        let redisResponse: EpicurusResponse = {
+          error: errorRef,
+          result: result
+        }
 
-          redisClient.lpush(req.reqId, JSON.stringify(redisResponse))
-        })
-      }
+        redisClient.lpush(req.reqId, JSON.stringify(redisResponse))
+        redisClient.expire(req.reqId, REDIS_RESPONSE_TTL_IN_SECONDS)
+      })
+
     })
   }
 
   brpop()
 }
 
-export function disableServers () {
+export function disableServers() {
   serversEnabled = false
   closeAllClients()
 }
 
-export function enableServers () {
+export function enableServers() {
   serversEnabled = true
 }
 
-export function closeAllClients () {
+export function closeAllClients() {
   clients.forEach(c => c.end(false))
 }
