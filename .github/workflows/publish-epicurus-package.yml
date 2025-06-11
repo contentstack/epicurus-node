@@ -4,36 +4,37 @@ on:
   push:
     branches:
       - master
-    
+
 jobs:
-    build:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v3
+  build:
+    runs-on: ubuntu-latest
 
-        - name: Set up Node.js
-          uses: actions/setup-node@v3
-          with:
-            node-version: 20
-            cache: 'npm'
-        
-        - name: Authenticate to Github Package Registry
-          env:
-            NODE_AUTH_TOKEN: ${{ secrets.PKG_TOKEN }}
-          run: |
-            echo "@contentstack:registry=https://npm.pkg.github.com" >> ~/.npmrc 
-            echo "//npm.pkg.github.com/:_authToken=${ NODE_AUTH_TOKEN}" > ~/.npmrc
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-        - name: Install dependencies
-          run: npm install
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
 
-        - name: Build the package
-          run: npm run compile
+      - name: Authenticate to GitHub Package Registry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.PKG_TOKEN }}
+        run: |
+          echo "@contentstack:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
 
-        - name: Publish to Github Package Registry
-          env:
-            NODE_AUTH_TOKEN: ${{ secrets.PKG_TOKEN }}
-          run: |
-            echo "Publishing Epicurus package to GitHub Package Registry..."
-            npm publish --registry=https://npm.pkg.github.com
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the package
+        run: npm run compile
+
+      - name: Publish to GitHub Package Registry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.PKG_TOKEN }}
+        run: |
+          echo "Publishing Epicurus package to GitHub Package Registry..."
+          npm publish --registry=https://npm.pkg.github.com
