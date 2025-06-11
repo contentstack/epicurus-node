@@ -3,7 +3,7 @@ name: Publish Epicurus Package
 on:
   push:
     branches:
-      - main
+      - master
     
 jobs:
     build:
