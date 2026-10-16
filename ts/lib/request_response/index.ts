@@ -1,4 +1,4 @@
-import * as v4 from 'uuid/v4'
+import { v4 } from 'uuid'
 
 import {
   EpicurusRequest,
