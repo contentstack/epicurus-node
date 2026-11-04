@@ -1,6 +1,3 @@
-> [!WARNING]
-> **This repo is deprecated and no longer maintained. Security updates are not supported. We recommend avoiding its use.**
-
 # Epicurus
 
 Epicurus provides a simple Request/Response and Publish/Subscribe abstraction on top of Redis.
